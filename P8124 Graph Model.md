@@ -38,9 +38,9 @@
   - `symmetry` $X_1 \perp X_2\left|Z \Longrightarrow X_2 \perp X_1\right| Z$
   - `decomposition` $X_1 \perp\left(X_2, X_3\right)\left|Z \Longrightarrow X_1 \perp X_2\right| Z$ 
   - `weak union` $X_1 \perp\left(X_2, X_3\right)\left|Z \Longrightarrow X_1 \perp X_2\right|\left(Z, X_3\right)$
-  - `contraction` $X_1 \perp X_2\left|\left(Z, X_3\right) \& X_1 \perp X_3\right| Z \Longrightarrow X_1 \perp\left(X_2, X_3\right) \mid Z$ 
+  - `contraction` $X_1 \perp X_2\left|\left(Z, X_3\right), \space X_1 \perp X_3\right| Z \Longrightarrow X_1 \perp\left(X_2, X_3\right) \mid Z$ 
 - and for positive distributions, also:
-  - `intersection` $X_1 \perp X_2\left|\left(Z, X_3\right) \& X_1 \perp X_3\right|\left(Z, X_2\right) \Longrightarrow X_1 \perp\left(X_2, X_3\right) \mid Z$
+  - `intersection` $X_1 \perp X_2\left|\left(Z, X_3\right), \space X_1 \perp X_3\right|\left(Z, X_2\right) \Longrightarrow X_1 \perp\left(X_2, X_3\right) \mid Z$
 
 
 
@@ -52,4 +52,6 @@
 
 
 # Directed Graph Models
+
+
 
