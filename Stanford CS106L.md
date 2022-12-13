@@ -146,7 +146,7 @@ int main() {
 
 - How inputstream define separating characters? Type matters!
 
-<img src="C:\Users\Jon\AppData\Roaming\Typora\typora-user-images\image-20221212020833261.png" alt="image-20221212020833261" style="zoom: 50%;" />
+<img src="Stanford CS106L.assets/image-20221213024831171.png" alt="image-20221213024831171" style="zoom:50%;" />
 
 
 
@@ -178,7 +178,7 @@ int main() {
 
 - positioning functions
 
-  <img src="C:\Users\Jon\AppData\Roaming\Typora\typora-user-images\image-20221212021531445.png" alt="image-20221212021531445" style="zoom:50%;" />
+  <img src="Stanford CS106L.assets/image-20221213024841938.png" alt="image-20221213024841938" style="zoom:50%;" />
 
 
 
@@ -186,7 +186,7 @@ int main() {
 
 - there are 4 bits indicating the state of the stream
 
-  <img src="C:\Users\Jon\AppData\Roaming\Typora\typora-user-images\image-20221212022429128.png" alt="image-20221212022429128" style="zoom:50%;" />
+  <img src="Stanford CS106L.assets/image-20221213024849746.png" alt="image-20221213024849746" style="zoom:50%;" />
 
   
 
@@ -288,5 +288,5 @@ int main() {
 
 - special keywords that change the behavior of the stream
 
-<img src="C:\Users\Jon\AppData\Roaming\Typora\typora-user-images\image-20221212030441164.png" alt="image-20221212030441164" style="zoom:50%;" />
+<img src="Stanford CS106L.assets/image-20221213024900445.png" alt="image-20221213024900445" style="zoom:50%;" />
 
