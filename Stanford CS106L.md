@@ -176,6 +176,8 @@ int main() {
 
   
 
+- `iss.ignore()`: skip 1 character in the buffer
+
 - positioning functions
 
   <img src="Stanford CS106L.assets/image-20221213024841938.png" alt="image-20221213024841938" style="zoom:50%;" />
@@ -281,6 +283,7 @@ int main() {
   - How to solve it: **`getline`**
     - `cin >> variable` treats whitespace as separator
     - `getline(cin, variable)` only treats `\n` as separator, and it also consumes the `\n` after reading the line
+    - `getline` can also be used as boolean in a way same with `if (iss >> result)`
 
 
 
@@ -290,3 +293,62 @@ int main() {
 
 <img src="Stanford CS106L.assets/image-20221213024900445.png" alt="image-20221213024900445" style="zoom:50%;" />
 
+- use manipulators to pad the output
+
+  <img src="Stanford CS106L.assets/image-20221213030806578.png" alt="image-20221213030806578" style="zoom:50%;" />
+
+
+
+## Types
+
+- in C++ there are various, complex types
+
+- example: signed / unsigned int 
+
+  - can't compare unsigned int with signed int!
+
+  - declare a unsigned int: `size_t num;`
+
+    <img src="Stanford CS106L.assets/image-20221213030936189.png" alt="image-20221213030936189" style="zoom:50%;" />
+
+- Type aliases: 
+
+  - you can set abbreviation for long type name
+
+  - you can avoid naming confliction of types by using aliases
+
+  - <img src="Stanford CS106L.assets/image-20221213031108189.png" alt="image-20221213031108189" style="zoom:50%;" />
+
+  - let compiler decide the type:
+
+    - <img src="Stanford CS106L.assets/image-20221213031315532.png" alt="image-20221213031315532" style="zoom:50%;" />
+
+    - be careful. it can be tricky.
+
+      <img src="Stanford CS106L.assets/image-20221213032606387.png" alt="image-20221213032606387" style="zoom:50%;" />
+
+    - when to use
+
+      <img src="Stanford CS106L.assets/image-20221213032546644.png" alt="image-20221213032546644" style="zoom:50%;" />
+
+
+
+## Struct
+
+- pair / tuple, structured binding example:
+
+  <img src="Stanford CS106L.assets/image-20221213033258666.png" alt="image-20221213033258666" style="zoom:50%;" />
+
+- struct: similar to object in Javascript
+
+  - a light-way class with only fields but no methods
+
+  <img src="Stanford CS106L.assets/image-20221213033523508.png" alt="image-20221213033523508" style="zoom:50%;" />
+
+
+
+- references ?
+- parameter in/out guideline
+  - rule: make code self-documenting, express its intent; show your intent through parameter type
+  - <img src="Stanford CS106L.assets/image-20221213034117804.png" alt="image-20221213034117804" style="zoom:50%;" />
+  - unlike Java, C++ let you manage the value passing mechanism! you can pass either value or reference!
