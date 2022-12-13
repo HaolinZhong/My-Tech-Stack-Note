@@ -1,2 +1,2 @@
 # My-Tech-Stack-Note
-This repo saves selected note for various softwares.
+This repo saves selected note for various softwares and courses.
