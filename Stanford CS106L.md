@@ -299,6 +299,8 @@ int main() {
 
 
 
+# L3 Types
+
 ## Types
 
 - in C++ there are various, complex types
@@ -347,8 +349,38 @@ int main() {
 
 
 
-- references ?
+## references 
+
+- unlike Java, C++ let you manage the value passing mechanism! you can pass either value or reference!
+
+- example:
+
+  <img src="Stanford CS106L.assets/image-20221213175706631.png" alt="image-20221213175706631" style="zoom:50%;" />
+
+
+
+- dangling reference - it's annoying!
+
+
+
 - parameter in/out guideline
   - rule: make code self-documenting, express its intent; show your intent through parameter type
   - <img src="Stanford CS106L.assets/image-20221213034117804.png" alt="image-20221213034117804" style="zoom:50%;" />
-  - unlike Java, C++ let you manage the value passing mechanism! you can pass either value or reference!
+
+
+
+## Conversion
+
+- like Java, has 2 types: promotion (upwards), coercion (downwards)
+- <img src="Stanford CS106L.assets/image-20221213221424622.png" alt="image-20221213221424622" style="zoom:50%;" />
+- <img src="Stanford CS106L.assets/image-20221213221609413.png" alt="image-20221213221609413" style="zoom:50%;" />
+  - `const` makes the variable immutable, so conversion needed when give it to a mutable variable
+
+
+
+## Uniform Initialization
+
+<img src="Stanford CS106L.assets/image-20221214022732860.png" alt="image-20221214022732860" style="zoom:50%;" />
+
+<img src="Stanford CS106L.assets/image-20221214022752121.png" alt="image-20221214022752121" style="zoom:50%;" />
+
