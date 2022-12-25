@@ -485,3 +485,277 @@ RUN;
   ```
 
   
+
+
+
+# L4 Prepare Data
+
+## Reading & Filtering
+
+### basic data step:
+
+```SAS
+DATA=output-table;
+        SET input-table;
+RUN;
+```
+
+- if `output-table` already exist, this step will overwrite it!
+- Any data source that can be read via a library can be used as the input table in the SET statement.
+
+
+
+### data step process
+
+- 2 phases: compilation, execution
+  - compilation: SAS checks for syntax errors in the program and establishes the table metadata, including the column attributes. 
+  - execution: SAS reads the data, processes it, and writes it to the output table one row at a time.
+
+- execution process: DATA step execution is like an automatic loop - it uses streaming
+  - The first time through the DATA step, the SET statement reads row number one from the input table
+  - and then processes any other statements in sequence, manipulating the values within that row.
+  - When SAS reaches the end of the DATA step, there is an implied OUPUT action, and the new row is written to the output table.
+  - The DATA step then automatically loops back to the top and executes the statements in order again, this time reading, manipulating, and outputting the second row.
+  - That implicit loop continues until all of the rows are read from the input table.
+
+
+
+### example
+
+```SAS
+data myclass;
+    set sashelp.class;
+    where age >=15;
+    *keep Name Age Height;
+    *drop Sex Weight;
+    format height 4.1 Weight 3.;
+run;
+```
+
+- use `where` to filter data
+- use `format` to set format for specified columns (the format will be applied in the output class!)
+- use `keep` `drop` to set columns needed
+
+
+
+
+
+## Computing New Columns
+
+### use expression to create new columns
+
+- syntax:
+
+  ```SAS
+  DATA output-table;
+          SET input-table;
+          new-column=expression;
+  RUN;
+  ```
+
+  - note: character expression, like `country="AU"`, is **case sensitive**! 
+
+- example:
+
+  ```SAS
+  data cars_new; 
+      set sashelp.cars;
+      where Origin ne "USA"; 
+      Profit = MSRP-Invoice;
+      Source = "Non-US Cars";
+      format Profit dollar10.;
+      keep Make Model MSRP Invoice Profit Source;
+  run;
+  ```
+
+  - Without a KEEP statement, the output table would include all columns. But because there is a KEEP statement in this code, you must explicitly list the new columns, so that they are included in the new table.
+
+
+
+### use functions to create new columns
+
+- numeric functions:
+
+|     Common Numeric Functions     |
+| :------------------------------: |
+|  **SUM** (*num1*, *num2*, ...)   |
+|  **MEAN** (*num1*, *num2*, ...)  |
+| **MEDIAN** (*num1*, *num2*, ...) |
+| **RANGE** (*num1*, *num2*, ...)  |
+|  **MIN** (*num1*, *num2*, ...)   |
+|  **MAX** (*num1*, *num2*, ...)   |
+|   **N** (*num1*, *num2*, ...)    |
+| **NMISS** (*num1*, *num2*, ...)  |
+
+- note these functions ignores missing values
+  - `mean(10, ., 5, 9)` generate 8: (10 + 5 + 9)  / 3 = 8
+
+
+
+- character functions:
+
+  | Character Function                          | What it Does                                                 |
+  | :------------------------------------------ | ------------------------------------------------------------ |
+  | **UPCASE** (*char*) **LOWCASE**(*char*)     | Changes letters in a character string to uppercase or lowercase |
+  | **PROPCASE** (*char*, <*delimiters*>)       | Changes the first letter of each word to uppercase and other letters to lowercase |
+  | **CATS** (*char1*, *char2*, ...)            | Concatenates character strings and removes leading and trailing blanks from each argument |
+  | **SUBSTR** (*char*, *position*, <*length*>) | Returns a substring from a character string                  |
+
+
+
+- example
+
+  ```SAS
+  data storm_new;
+      set pg1.storm_summary;
+      drop Type Hem_EW Hem_NS MinPressure Lat Lon;
+      * overwrite basin, name with proper case
+      Basin=upcase(Basin);
+      Name=propcase(Name);
+      * create hemisphere by combining two cols
+      Hemisphere=cats(Hem_NS, Hem_EW);
+      * substr start from 2 (inclusive, 1-indexed), and has a fixed length of 1
+      Ocean=substr(Basin,2,1);
+  run;   
+  ```
+
+  
+
+- date functions
+
+  | Date Function            | What it Does                                                 |
+  | :----------------------- | ------------------------------------------------------------ |
+  | **MONTH** (*SAS-date*)   | Returns a number from 1 through 12 that represents the month |
+  | **YEAR** (*SAS-date*)    | Returns the four-digit year                                  |
+  | **DAY** (*SAS-date*)     | Returns a number from 1 through 31 that represents the day of the month |
+  | **WEEKDAY** (*SAS-date*) | Returns a number from 1 through 7 that represents the day of the week (Sunday=1) |
+  | **QTR** (*SAS-date*)     | Returns a number from 1 through 4 that represents the quarter |
+
+
+
+| Date Function                             | What it Does                                                 |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| **TODAY** ()                              | Returns the current date as a numeric SAS date value (no argument is required because the function reads the system clock) |
+| **MDY** (*month*, *day*, *year*)          | Returns a SAS date value from numeric month, day, and year values |
+| **YRDIF** (*startdate*, *enddate*, 'AGE') | Calculates a precise age between two dates (has decimal places) |
+
+
+
+- example
+
+  ```SAS
+  data storm_new;
+      set pg1.storm_damage;
+      drop Summary;
+      * calculate the age in years between `date` column and today
+      YearsPassed=yrdif(Date,today(),"age");
+      * generate a date that has the same mon, day as `date`, but the year of current year
+      Anniversary=mdy(month(Date),day(Date),year(today()));
+      format YearsPassed 4.1 Date Anniversary mmddyy10.; 
+  run; 
+  ```
+
+
+
+
+
+### **Creating Character Columns with the LENGTH statement**
+
+- when assigning a value to a new column for the first time, the length of the value will be used by SAS as the length of the column. If we assigned another value that is longer, this value will be truncated.
+
+  ```SAS
+  data cars2;
+      set sashelp.cars;
+      * the first time assigning value, so length of cartype is set to be 5
+      if MSRP<60000 then CarType="Basic";
+      * in result, cartype will be "Luxur", truncated to length of 5
+      else CarType="Luxury";
+      keep Make Model MSRP CarType;
+  run;
+  ```
+
+  
+
+- to avoid such problem, we can declare the length of the new column at first: 
+
+  - **LENGTH** *char-column* $ _length_;
+
+  - must be placed before the first assignment, or in the execution phase SAS will still determine the length by the first assignment
+
+  - ```SAS
+    data cars2;
+        set sashelp.cars;
+        LENGTH CarType $ 6;
+        if MSRP<60000 then CarType="Basic";
+        * now in result, cartype will be "Luxury"
+        else CarType="Luxury";
+        keep Make Model MSRP CarType;
+    run;
+    ```
+
+    
+
+
+
+
+
+## Conditional Processing
+
+### if then
+
+```SAS
+data storm_new;
+    set pg1.storm_summary;
+    keep Season Name Basin MinPressure PressureGroup;
+    if MinPressure=. then PressureGroup=.;
+    if MinPressure<=920 then PressureGroup=1;
+    if MinPressure>920 then PressureGroup=0;
+run; 
+```
+
+
+
+### if then else
+
+```SAS
+data cars2;
+    set sashelp.cars;
+    if MSRP<20000 then Cost_Group=1;
+    else if MSRP<40000 then Cost_Group=2;
+    else if MSRP<60000 then Cost_Group=3;
+    else Cost_Group=4;
+    keep Make Model Type MSRP Cost_Group;
+run;
+```
+
+
+
+- note: only 1 executable statement allowed after `then`
+- use `then do`, `else do` to execute multiple statement
+
+
+
+### if then do end
+
+- use `if then do end` to output data to 2 different tables
+
+```SAS
+data under40 over40;
+    set sashelp.cars;
+    keep Make Model msrp cost_group;
+    if MSRP<20000 then do;
+       Cost_Group=1;
+       * use output to manually control which table that this row will go to
+       output under40;
+    end;
+    else if MSRP<40000 then do;
+       Cost_Group=2;
+       output under40;
+    end;
+    else do;
+       Cost_Group=3;
+       output over40;
+    end;
+run;
+```
+
