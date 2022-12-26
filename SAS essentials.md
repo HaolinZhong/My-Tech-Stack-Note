@@ -1364,3 +1364,135 @@ footnote;
   ```
 
   
+
+
+
+
+
+# L7 Using SQL in SAS
+
+## basic usage
+
+### SQL and SAS
+
+- SAS can integrate SQL
+- SQL is typically used in the Prepare data and Analyze and report on data phases of the SAS programming process. It's alternative to DATA step and certain PROC steps.
+- Although DATA and PROC steps and SQL definitely have some overlap in terms of functionality, they process data differently behind the scenes, and they each have their own unique advantages. That's why it's valuable to know how to use both native SAS syntax and PROC SQL in your SAS programs.
+
+
+
+### PROC SQL
+
+```SAS
+PROC SQL;
+
+* SQL stmt;
+SELECT clause
+          FROM clause
+                    <WHERE clause>
+                              <ORDER BY clause>;
+
+QUIT;
+```
+
+- note: each SQL statement executes immediately and independently.
+
+- example:
+
+  ```SAS
+  proc sql;
+  * we can still use format in sql part, although this is not standard SQL
+  select Name, Age, Height, Birthdate format=date9.
+      from pg1.class_birthdate;
+  quit; 
+  ```
+
+
+
+
+
+### filter & sorting
+
+```SAS
+proc sql;
+select Name, Age, Height, Birthdate format=date9.
+    from pg1.class_birthdate
+    * use SQL to filter and sort;
+    where age > 14
+    order by Height desc;
+quit; 
+```
+
+
+
+```SAS
+title "International Storms since 2000";
+title2 "Category 5 (Wind>156)";
+proc sql;
+* SAS function can still be used in SQL part;
+select Season, propcase(Name) as Name, 
+       StartDate format=mmddyy10., MaxWindMPH 
+    from pg1.storm_final
+    * advantage of SQL is easy filtering and sorting;
+    where MaxWindMPH > 156 and Season > 2000
+    order by MaxWindMPH desc, Name;
+quit;
+title;   
+```
+
+
+
+### Creating and Deleting Tables in SQL
+
+- create table
+
+  - **CREATE TABLE** *table-name* **AS**
+
+  - ```SAS
+    proc sql;
+    create table work.myclass as
+        select Name, Age, Height
+            from pg1.class_birthdate
+            where age > 14
+            order by Height desc;
+    quit;
+    ```
+
+- drop table
+
+  - **DROP TABLE** *table-name*;
+
+  - ```SAS
+    proc sql;
+        drop table work.myclass;
+    quit;
+    ```
+
+
+
+
+
+## Joining Tables Using SQL in SAS
+
+### Creating Inner Joins in SQL
+
+- **FROM** *table1* **INNER JOIN** table2
+  **ON** *table1.column* = *table2.column*
+
+- ```SAS
+  proc sql;
+  select Grade, Age, Teacher 
+      from pg1.class_update inner join pg1.class_teachers
+      on class_update.Name = class_teachers.Name;
+  quit;  
+  ```
+
+
+
+### Comparing SQL and DATA step
+
+| DATA Step                                                    | PROC SQL                                             |
+| ------------------------------------------------------------ | ---------------------------------------------------- |
+| provides more control of reading, writing, and manipulating data | ANSI-standard language used by most databases        |
+| can create multiple tables in one step                       | code can be more streamlined                         |
+| includes looping and array processing                        | can manipulate, summarize, and sort data in one step |
