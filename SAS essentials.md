@@ -338,7 +338,8 @@ RUN;
 - syntax:
   - define: **%LET** *macro-variable*=*value*;
   - use: **&** *macro-var*
-
+    - note: The macro variable must be in double quotation marks in order for the character value to be substituted. No substitution for single quotation marks.
+  
 - example:
 
   ```SAS
@@ -609,12 +610,12 @@ run;
   data storm_new;
       set pg1.storm_summary;
       drop Type Hem_EW Hem_NS MinPressure Lat Lon;
-      * overwrite basin, name with proper case
+      * overwrite basin, name with proper case;
       Basin=upcase(Basin);
       Name=propcase(Name);
-      * create hemisphere by combining two cols
+      * create hemisphere by combining two cols;
       Hemisphere=cats(Hem_NS, Hem_EW);
-      * substr start from 2 (inclusive, 1-indexed), and has a fixed length of 1
+      * substr start from 2 (inclusive, 1-indexed), and has a fixed length of 1;
       Ocean=substr(Basin,2,1);
   run;   
   ```
@@ -647,9 +648,9 @@ run;
   data storm_new;
       set pg1.storm_damage;
       drop Summary;
-      * calculate the age in years between `date` column and today
+      * calculate the age in years between `date` column and today;
       YearsPassed=yrdif(Date,today(),"age");
-      * generate a date that has the same mon, day as `date`, but the year of current year
+      * generate a date that has the same mon, day as `date`, but the year of current year;
       Anniversary=mdy(month(Date),day(Date),year(today()));
       format YearsPassed 4.1 Date Anniversary mmddyy10.; 
   run; 
@@ -666,9 +667,9 @@ run;
   ```SAS
   data cars2;
       set sashelp.cars;
-      * the first time assigning value, so length of cartype is set to be 5
+      * the first time assigning value, so length of cartype is set to be 5;
       if MSRP<60000 then CarType="Basic";
-      * in result, cartype will be "Luxur", truncated to length of 5
+      * in result, cartype will be "Luxur", truncated to length of 5;
       else CarType="Luxury";
       keep Make Model MSRP CarType;
   run;
@@ -687,7 +688,7 @@ run;
         set sashelp.cars;
         LENGTH CarType $ 6;
         if MSRP<60000 then CarType="Basic";
-        * now in result, cartype will be "Luxury"
+        * now in result, cartype will be "Luxury";
         else CarType="Luxury";
         keep Make Model MSRP CarType;
     run;
@@ -745,7 +746,7 @@ data under40 over40;
     keep Make Model msrp cost_group;
     if MSRP<20000 then do;
        Cost_Group=1;
-       * use output to manually control which table that this row will go to
+       * use output to manually control which table that this row will go to;
        output under40;
     end;
     else if MSRP<40000 then do;
@@ -759,3 +760,338 @@ data under40 over40;
 run;
 ```
 
+
+
+
+
+
+
+
+
+# L5 Analyzing and Reporting on Data
+
+## Enhancing Reports with Titles, Footnotes, and Labels
+
+### titles & footnote
+
+- syntax:
+  - **TITLE**<n> "*title-text*";
+  - **FOOTNOTE**<n> "*footnote-text*"**;**
+  - `n` means the line number in title/footnote
+
+- note
+  - title, footnote are global stmt, so they live through the SAS session
+  - sometimes it might happens that you current report has titles / footnote set previously (in another program)
+  - to avoid such situation, use null title stmt to eliminate previous titles:
+    - **TITLE**;
+    - **FOOTNOTE**;
+    - it's a good habit to call it at the end of each .SAS program
+
+- turn off auto generated procedure title: `ods noproctitle`
+
+
+
+### Using Macro Variables and Functions in Titles and Footnotes
+
+```SAS
+%let age=13;
+
+title1 "Class Report";
+title2 "Age=&age";
+footnote1 "School Use Only";
+
+proc print data=pg1.class_birthdate;
+    where age=&age;
+run;
+
+title;
+footnote;
+```
+
+
+
+### Applying Temporary Labels to Columns
+
+- syntax: **LABEL** *col-name=*"*label-text*"**;**
+
+- example:
+
+  ```SAS
+  proc means data=sashelp.cars;
+      where type="Sedan";
+      var MSRP MPG_Highway;
+      label MSRP="Manufacturer Suggested Retail Price"
+            MPG_Highway="Highway Miles per Gallon";
+  run; 
+  ```
+
+- using label outside the datastep will result in temporary labels; however, if put in data step, these labels will become permanent
+
+  - you can observe the label attribute by proc content
+  - still need to explicitly use label option for proc print to display the label
+
+- misc:
+
+  - PROC MEANS, PROC FREQ, and most other procedures automatically **display the labels in the results as a column**, but PROC PRINT is an exception. Because the main purpose of PROC PRINT is to examine the data, column names are displayed by default.
+
+  - To display labels instead, you must add the LABEL option in the PROC PRINT statement.
+
+    ```SAS
+    * add `label` for proc print
+    proc print data=sashelp.cars label;
+        where type="Sedan";
+        var Make Model MSRP MPG_Highway MPG_City;
+        label MSRP="Manufacturer Suggested Retail Price"
+              MPG_Highway="Highway Miles per Gallon";
+    run; 
+    ```
+
+  - to remove the `obs` column in result, add `noobs` in proc print
+
+    
+
+### Segmenting Reports
+
+- syntax: **BY** _variable(s)_;
+
+- note: To do this, you must sort the data first using the same BY-column.
+
+- example:
+
+  ```SAS
+  * sort at first;
+  proc sort data=sashelp.cars 
+            out=cars_sort;
+      by Origin;
+  run;
+   
+  * for each value of origin, generate a report table on Type;
+  proc freq data=cars_sort;
+      by Origin;
+      tables Type;
+  run;
+  ```
+
+  
+
+
+
+## Creating Frequency Reports
+
+### Creating Frequency Reports and Graphs
+
+- a Basic Frequency Report is based on individual columns. By default, each column listed in the TABLES statement generates a separate frequency table that includes the number and percentage of rows for each value in the data, as well as a cumulative frequency and percent.
+
+- There are options that you can add to the PROC FREQ statement and options you can add to the TABLES statement that you can use to customize the output, and include additional statistics.
+
+- syntax:
+
+  ```SAS
+  proc freq data=input-table <proc-options>;
+      tables col-name(s) / options;
+      format StartDate monname.;
+  run;
+  ```
+
+  
+
+- examples:
+
+  - ```SAS
+    * order=freq : in report, order values by freq, instead of the value itself;
+    * nlevels: summarzing the number of distinct values for each variable;
+    proc freq data=pg1.storm_final order=freq nlevels;
+        tables BasinName Season;
+    run; 
+    ```
+
+    - `order=formatted | data | freq`
+    - `nlevels`
+
+  - 
+
+    ```SAS
+    proc freq data=pg1.storm_final order=freq nlevels;
+        * nocum: suppress the cumulative columns;
+        tables BasinName Season / nocum;
+    run; 
+    ```
+
+    - `nocum` `nopercent` `out=output-table`
+
+  - 
+
+    ```SAS
+    proc freq data=pg1.storm_final order=freq nlevels;
+        * 2) so now the startdate table will only have 12 values, and we can count storm happend in each month;
+        tables BasinName StartDate / nocum;   /* options have to be added after the left dash*/
+        * 1) use monname. to format the startdate, let it becomes names of months
+        format StartDate monname.;
+    run;
+    ```
+
+    
+
+  - ```SAS
+    * call graph library. it remains for the session and has no reason to shut it down;
+    ods graphics on;
+    proc freq data=pg1.storm_final order=freq nlevels;
+        tables BasinName StartDate /
+        	   * call freq plot, set orient and scale
+               nocum plots=freqplot(orient=horizontal scale=percent);
+        format StartDate monname.;
+    run;
+    ```
+
+    
+
+  - ```SAS
+    ods graphics on;
+    * remove procedure title;
+    ods noproctitle;
+    title "Frequency Report for Basin and Storm Month";
+    proc freq data=pg1.storm_final order=freq nlevels;
+        tables BasinName StartDate / 
+               nocum plots=freqplot(orient=horizontal scale=percent);
+        format StartDate monname.;
+        label BasinName="Basin"
+              StartDate="Storm Month";
+    run;
+    title;
+    * re start procedure title;
+    ods proctitle; 
+    ```
+
+
+
+## Creating Two-Way Frequency Reports
+
+- syntax:
+
+  ```SAS
+  PROC FREQ DATA=input-table < options >;
+          * note: here two col were connected with *;
+          TABLES col-name*col-name < / options >;
+  RUN;
+  ```
+
+  - output is a 2x2 table, with freq, percent, row pct and col pct in each cell:
+
+    <img src="SAS essentials.assets/image-20221225183624852-16720113911231.png" alt="image-20221225183624852" style="zoom:50%;" />
+
+
+
+- options
+
+  - ```SAS
+    proc freq data=pg1.storm_final;
+    	* remove row/col_pct and percent
+        tables BasinName*StartDate / norow nocol nopercent;
+        * same trick to let startdate be month name;
+        format StartDate monname.;
+        label BasinName="Basin"
+              StartDate="Storm Month";
+    run;
+    ```
+
+  - `tables BasinName*StartDate / crosslist;`
+
+    - same statistics, different arrangement 
+    - very much alike to the following one but omit duplicate value in the first category
+
+  - `tables BasinName*StartDate / list;`
+
+    - same statistics, different arrangement (tidy data)
+
+  - ```SAS
+    * noprint: suppress auto print;
+    proc freq data=pg1.storm_final noprint;
+        * output the freq report table;
+        tables StartDate*BasinName / out=stormcounts;
+        format StartDate monname.;
+        label BasinName="Basin"
+              StartDate="Storm Month";
+    run;
+    ```
+
+    
+
+## Creating Summary Statistics Reports
+
+- The MEANS procedure is great for calculating basic summary statistics and looking for numeric values that might be outside of an expected range. But you can also use PROC MEANS to generate complex reports that include various statistics and groupings within the data.
+
+- syntax:
+
+  ```SAS
+  PROC MEANS DATA=input-table <stat-list>;
+          VAR col-name(s);
+          CLASS col-name(s);
+          WAYS n;
+  RUN;
+  ```
+
+  
+
+- examples:
+
+  - ```SAS
+    * here we specified stat-list;
+    * add the MAXDEC=0 option to round statistics to the nearest integer;
+    proc means data=pg1.storm_final mean median min max maxdec=0;
+        var MaxWindMPH;
+    run;  
+    ```
+
+  - segmentation:
+
+    ```SAS
+    proc means data=pg1.storm_final mean median min max maxdec=0;
+        var MaxWindMPH;
+        * class col-name was used to calculate statistics for groups
+        class BasinName;
+    run;   
+    ```
+
+  - two-way segmentation:
+
+    ```SAS
+    proc means data=pg1.storm_final mean median min max maxdec=0;
+        var MaxWindMPH;
+        * the two col will be combined for segmentation
+        class BasinName StormType;
+    run;   
+    ```
+
+  - control ways of segmentation
+
+    ```SAS
+    proc means data=pg1.storm_final mean median min max maxdec=0;
+        var MaxWindMPH;
+        class BasinName StormType;
+        * when you add `ways`, col-names in class stmt become candidates;
+        * ways 0: do not do segmentation;
+        * ways 1: do segmentation for each single candidates;
+        * ways 2: do segmentation for the 2 candidates combined;
+        ways 0 1 2;
+    run;
+    ```
+
+    
+
+## Creating an Output Summary Table
+
+- You can use the OUTPUT statement in PROC MEANS to create a summary data set. The OUT= option names the output table. In the OUTPUT statement you can generate output statistics and name a column to store them in.
+- syntax:
+  - **OUTPUT OUT=**output-table <statistic(col-name)=col-name> </ option(s)>**;**
+
+- example:
+
+  ```SAS
+  proc means data=sashelp.heart noprint;
+      var Cholesterol Weight;
+      class Chol_Status Smoking_Status;
+      output out=heart_stats mean=AvgWeight; 
+  run; 
+  ```
+
+  
