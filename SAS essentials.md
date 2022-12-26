@@ -1095,3 +1095,272 @@ footnote;
   ```
 
   
+
+
+
+
+
+
+
+# L6 Export Result
+
+## Exporting data
+
+### proc export
+
+- SAS programming environments includes point-and-click tools that export data to various delimited text formats
+- syntax
+  - **PROC EXPORT DATA=***input-table* **OUTFILE=**"*output-file*"
+                  <**DBMS** =*identifier>* **<REPLACE>**;
+    **RUN;**
+
+- example
+
+  ```SAS
+  * OUTFILE= option specifies the full path and file name of the exported data file;
+  * the path that you specify in the OUTFILE= option must be relative to the location of SAS;
+  * The DBMS= option tells SAS how to format the output; options: CSV, TAB, DLM, or XLSX;
+  * REPLACE option tells SAS to overwrite the output file if it already exists;
+  
+  proc export data=sashelp.cars
+       outfile="s:/workshop/output/cars.txt"
+       dbms=tab replace;
+  run; 
+  ```
+
+  
+
+  ## libname output
+
+- Another easy way to export data is to use a LIBNAME engine. In this scenario, you are creating the table rather than exporting an existing table.
+
+- ```SAS
+  libname myxl xlsx "&outpath/cars.xlsx";
+  
+  data myxl.asiacars;
+      set sashelp.cars;
+      where origin='Asia';
+  run;
+  
+  libname myxl clear;
+  ```
+
+  - This code extracts data about cars manufactured in Asia from **sashelp.cars**, and writes the result directly into the **asiacars** worksheet in the **cars** workbook.
+
+- example: 
+
+  ```SAS
+  * xlout is bounded to the xlsx file by the libname stmt;
+  libname xlout xlsx "&outpath/southpacific.xlsx";
+  
+  * the data step created the work sheet South_Pacific in the xlsx file;
+  data xlout.South_Pacific;
+      set pg1.storm_final;
+      where Basin="SP";
+  run;
+  
+  * the proc means step also created the work sheet Season_Stat in the xlsx file;
+  proc means data=pg1.storm_final noprint maxdec=1;
+      where Basin="SP";
+      var MaxWindKM;
+      class Season;
+      ways 1;
+      output out=xlout.Season_Stats n=Count mean=AvgMaxWindKM max=StrongestWindKM;
+  run; 
+  ```
+
+  
+
+
+
+## Exporting Report
+
+### Using the SAS Output Delivery System
+
+- The SAS Output Delivery System (or ODS) is programmable and flexible, making it simple to automate the entire process of exporting reports to other formats.
+
+  - In ODS terminology, an output format is called a destination.
+  - Common destinations of this type include XLSX for Excel, RTF for Microsoft Word, PPTX for PowerPoint, and PDF. 
+
+- syntax:
+
+  - ```SAS
+    ODS <destination> <destination-specifications>;
+    
+    /* SAS code that produces output */
+    
+    ODS <destination> CLOSE;
+    ```
+
+    
+
+### Exporting Results to CSV
+
+- syntax:
+
+  ```SAS
+  ODS CSVALL FILE="filename.csv";
+  
+  /* SAS code that produces output */
+  
+  ODS CSVALL CLOSE;
+  ```
+
+- example:
+
+  ```SAS
+  ods csvall file="&outpath/cars.csv";
+  proc print data=sashelp.cars noobs;
+      var Make Model Type MSRP MPG_City MPG_Highway;
+      format MSRP dollar8.;
+  run;
+  ods csvall close;
+  ```
+
+  - difference from `proc export`: The ODS statements are exporting the results of a procedure, so by using ODS CSVALL with PROC PRINT, you can specify the order and format of the columns in your output CSV file.
+
+
+
+### Exporting Results to Excel
+
+- syntax:
+
+  ```SAS
+  ODS EXCEL FILE="filename.xlsx" STYLE=style
+          OPTIONS(SHEET_NAME='label');
+  
+  /* SAS code that produces output */
+  
+  ODS EXCEL CLOSE;
+  ```
+
+- example
+
+  ```SAS
+  * open a new file
+  ods excel file="&outpath/wind.xlsx";
+  
+  * main content;
+  title "Wind Statistics by Basin";
+  ods noproctitle;
+  proc means data=pg1.storm_final min mean median max maxdec=0;
+      class BasinName;
+      var MaxWindMPH;
+  run;
+  
+  title "Distribution of Maximum Wind";
+  proc sgplot data=pg1.storm_final;
+      histogram MaxWindMPH;
+      density MaxWindMPH;
+  run; 
+  title;  
+  ods proctitle;
+  
+  * close the file;
+  ods excel close;
+  ```
+
+  - this code will output the result of the middle SAS code to the file with default style
+
+  
+
+- adjust style
+
+  - use `proc template` to see style options:
+
+    ```SAS
+    proc template;
+        list styles;
+    run;
+    ```
+
+  - set style:
+
+    ```SAS
+    * style=sasdocprinter: set style (a plain style that similar to most xlsx files);
+    * options(sheet_name='Wind Stats'): set sheet name;
+    ods excel file="&outpath/wind.xlsx" style=sasdocprinter
+              options(sheet_name='Wind Stats');
+    title "Wind Statistics by Basin";
+    ods noproctitle;
+    proc means data=pg1.storm_final min mean median max maxdec=0;
+        class BasinName;
+        var MaxWindMPH;
+    run;
+    
+    * options(sheet_name='Wind Stats'): set sheet name;
+    ods excel options(sheet_name='Wind Distribution');
+    title "Distribution of Maximum Wind";
+    proc sgplot data=pg1.storm_final;
+        histogram MaxWindMPH;
+        density MaxWindMPH;
+    run;
+    title;
+    ods proctitle;
+    ods excel close; 
+    ```
+
+    
+
+
+
+### Exporting Results to PowerPoint and Microsoft Word
+
+- ppt:
+  - **ODS POWERPOINT FILE=**"*filename.pptx*" **STYLE**=*style***;**
+    /* SAS code that produces output */
+    **ODS POWERPOINT CLOSE;**
+
+- word:
+  - **ODS RTF FILE=**"*filename.rtf*" **STARTPAGE=NO****;**
+    /* SAS code that produces output */
+    **ODS RTF CLOSE;**
+
+
+
+### Exporting Results to PDF
+
+- **ODS PDF FILE=**"*filename.pdf*" **STYLE=**style
+          **STARTPAGE=NO PDFTOC=**n***;**
+  **ODS PROCLABEL "***label**";**
+
+  /* SAS code that produces output */
+
+  **ODS PDF CLOSE;**
+
+  
+
+- example:
+
+  ```SAS
+  * startpage=no: eliminate page breaks between procedures;
+  * style=journal: just try a different style
+  * pdftoc=1: bookmarks are expanded only one level when the PDF is opened
+  ods pdf file="&outpath/wind.pdf" startpage=no style=journal pdftoc=1; 
+  
+  * main content;
+  ods noproctitle;
+  
+  ods proclabel "Wind Statistics";
+  title "Wind Statistics by Basin";
+  proc means data=pg1.storm_final min mean median max maxdec=0;
+      class BasinName;
+      var MaxWindMPH;
+  run;
+  
+  * ods proclabel: customize the bookmark labels;
+  ods proclabel "Wind Distribution"; 
+  title "Distribution of Maximum Wind";
+  proc sgplot data=pg1.storm_final;
+      histogram MaxWindMPH;
+      density MaxWindMPH;
+  run;
+  title;
+  
+  ods proctitle;
+  
+  * close file;
+  ods pdf close; 
+  ```
+
+  
