@@ -1496,3 +1496,38 @@ title;
 | provides more control of reading, writing, and manipulating data | ANSI-standard language used by most databases        |
 | can create multiple tables in one step                       | code can be more streamlined                         |
 | includes looping and array processing                        | can manipulate, summarize, and sort data in one step |
+
+
+
+
+
+
+
+
+
+
+
+# Summary
+
+The work flow of SAS programming
+
+- import external data: `libname`, `proc import`
+- exploratory data analysis & report: 
+  - `proc print`, `proc means`, `proc univariate`, `proc freq`
+    - note arguments/options for advanced report
+  - segmentation: `BY`
+  - title, footnote, labels
+  - format with `proc print`
+- data engineering
+  - `data` step
+    - functions
+    - conditional stmt
+    - loops
+  - `proc sort`: sort and remove duplicate
+- export
+  - export data: `proc export`
+  - export report: `ODS`
+
+- misc:
+  - `proc sql`
+  - macro variables
