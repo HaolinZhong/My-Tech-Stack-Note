@@ -338,7 +338,7 @@ RUN;
 - syntax:
   - define: **%LET** *macro-variable*=*value*;
   - use: **&** *macro-var*
-    - note: The macro variable must be in double quotation marks in order for the character value to be substituted. No substitution for single quotation marks.
+    - note: The macro variable must be in double quotation marks in order for the character value to be substituted. **No substitution for single quotation marks (must use double quotation)**.
   
 - example:
 
@@ -1503,7 +1503,13 @@ title;
 
 
 
+# Misc
 
+- proc transpose
+  - `name`: specifying the name of the first column (containing col names of raw table) of the transposed table
+  - `id`: specifying which raw col's values were used to generate colnames of transposed table (instead of using col 1 - col n).  **can be obtained by looking at cols after the `_name_` col.**
+  - `var`: specifying which vars will be transposed. By default proc transpose will transpose all numeric columns. **can be obtained by looking at the values in the first column (or second column if BY was also used) of the transposed table**. (colname is `_name_` by d qefault).
+  - `by`: specifying that the result will be grouped by which cols. **can be obtained by looking at cols before `__name__` cols**.
 
 
 
